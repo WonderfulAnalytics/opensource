@@ -20,7 +20,7 @@ prompt = ChatPromptTemplate.from_messages(
 )
 
 # Initialize the Ollama Llama2 model with streaming callback
-llm = Ollama(model="gemma:2b")
+llm = Ollama(model="gemma:2b", base_url="http://localhost:11434")
 output_parser = StrOutputParser()
 chain = prompt | llm | output_parser
 
