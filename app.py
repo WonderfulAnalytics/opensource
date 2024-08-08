@@ -1,6 +1,3 @@
-from langchain_community.llms import Ollama
-from langchain_core.prompts import ChatPromptTemplate
-from langchain_core.output_parsers import StrOutputParser
 import streamlit as st
 import requests
 from requests.exceptions import ConnectionError
@@ -14,17 +11,10 @@ system_prompt = (
 )
 
 # Define the prompt template
-prompt = ChatPromptTemplate.from_messages(
-    [
-        ("system", system_prompt),
-        ("user", "Question: {question}")
-    ]
-)
-
-# Initialize the Ollama Llama2 model
-llm = Ollama(model="gemma:2b", base_url="http://localhost:11434")
-output_parser = StrOutputParser()
-chain = prompt | llm | output_parser
+prompt = {
+    "system": system_prompt,
+    "user": "Question: {question}"
+}
 
 # Streamlit app
 st.title("Talk to Google Gemma 2B")
@@ -35,9 +25,20 @@ question = st.text_input("What question do you have in mind?")
 
 if question:
     try:
-        # Get response
-        response = chain.invoke({"question": question})
-        st.write(f"Response: {response}")
+        # Send the request to the endpoint
+        response = requests.post(
+            url="http://localhost:11434/generate",
+            json={"question": question},
+            headers={"Content-Type": "application/json"}
+        )
+
+        # Check the response status
+        if response.status_code == 200:
+            # Get the generated response
+            generated_response = response.json()["response"]
+            st.write(f"Response: {generated_response}")
+        else:
+            st.error(f"Error: {response.json().get('error', 'Unknown error')}")
     except ConnectionError:
         st.error("Failed to connect to the model server. Please ensure the server is running and accessible.")
     except Exception as e:
